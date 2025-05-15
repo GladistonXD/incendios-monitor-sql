@@ -5,17 +5,6 @@
 
 Um sistema simples para registro e gerenciamento de ocorrências urbanas como buracos em vias, problemas de iluminação, descarte irregular de lixo e outras questões de infraestrutura pública.
 
-## 📋 Índice
-
-- [Visão Geral](#visão-geral)
-- [Tecnologias](#tecnologias)
-- [Estrutura do Banco de Dados](#estrutura-do-banco-de-dados)
-- [Instalação](#instalação)
-- [Como Usar](#como-usar)
-- [Exemplos](#exemplos)
-- [Contribuição](#contribuição)
-- [Licença](#licença)
-
 ## 🔍 Visão Geral
 
 Este projeto implementa um banco de dados para um sistema de registro de ocorrências urbanas, permitindo que usuários reportem problemas, acompanhem seu status e interajam através de comentários. O sistema é ideal para prefeituras, associações de bairro ou qualquer organização que precise gerenciar solicitações e ocorrências.
