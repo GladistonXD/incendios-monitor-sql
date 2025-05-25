@@ -1,202 +1,161 @@
-# Sistema de Registro de Ocorrências
+# 🚀 Como Instalar no XAMPP
 
-![Licença](https://img.shields.io/badge/license-MIT-blue.svg)
-![Versão](https://img.shields.io/badge/version-1.0.0-green.svg)
+## 📋 Pré-requisitos
+- XAMPP instalado ([Download aqui](https://www.apachefriends.org/))
 
-Um sistema simples para registro e gerenciamento de ocorrências urbanas como buracos em vias, problemas de iluminação, descarte irregular de lixo e outras questões de infraestrutura pública.
+## 🔧 Passo a Passo
 
-## 🔍 Visão Geral
+### 1. **Baixar e Preparar**
+```bash
+# Criar pasta no htdocs do XAMPP
+# Exemplo: C:\xampp\htdocs\occurrence-system\
+```
 
-Este projeto implementa um banco de dados para um sistema de registro de ocorrências urbanas, permitindo que usuários reportem problemas, acompanhem seu status e interajam através de comentários. O sistema é ideal para prefeituras, associações de bairro ou qualquer organização que precise gerenciar solicitações e ocorrências.
+### 2. **Copiar Arquivos**
+Copie todos os arquivos para a pasta criada:
+```
+C:\xampp\htdocs\occurrence-system\
+├── index.html
+├── app.js
+├── config/
+│   └── database.php
+├── api/
+│   ├── occurrences.php
+│   └── stats.php
+└── INSTALACAO_XAMPP.md
+```
 
-### Funcionalidades Principais
+### 3. **Iniciar XAMPP**
+1. Abra o **XAMPP Control Panel**
+2. Inicie o **Apache** (clique em "Start")
+3. Inicie o **MySQL** (clique em "Start")
 
-- Registro de ocorrências com geolocalização
-- Acompanhamento de status (pendente, em análise, resolvido)
-- Sistema de comentários
-- Diferentes níveis de acesso (admin, operador, comum)
-- Consultas e filtros por diversos critérios
+### 4. **Criar Banco de Dados (Opcional)**
+O banco é criado automaticamente, mas você pode criar manualmente:
 
-## 🛠️ Tecnologias
+1. Acesse: http://localhost/phpmyadmin
+2. Clique em "Novo" 
+3. Nome do banco: `occurrence_system`
+4. Clique em "Criar"
 
-- MySQL 8.0
-- SQL padrão ANSI
-- Git para controle de versão
+### 5. **Acessar o Sistema**
+Abra o navegador e acesse:
+```
+http://localhost/occurrence-system/
+```
 
-## 📥 Instalação
+## ✅ **Verificar se está funcionando**
 
-### Pré-requisitos
+1. **Teste de conexão**: Clique no botão "Testar DB" no sistema
+2. **Deve aparecer**: "✅ Conexão com banco OK!"
+3. **Se der erro**: Verifique se Apache e MySQL estão rodando
 
-- MySQL 8.0 ou superior
-- Cliente MySQL ou ferramenta como MySQL Workbench
+## 🔧 **Configurações do Banco**
+
+Se precisar alterar as configurações, edite o arquivo `config/database.php`:
+
+```php
+$host = 'localhost';        // Servidor MySQL
+$dbname = 'occurrence_system'; // Nome do banco
+$username = 'root';         // Usuário MySQL
+$password = '';             // Senha MySQL (vazio no XAMPP)
+```
+
+## 📱 **Funcionalidades**
+
+- ✅ **Captura de fotos** via câmera
+- ✅ **Upload de imagens**
+- ✅ **Banco MySQL** permanente
+- ✅ **Filtros e busca**
+- ✅ **Estatísticas**
+- ✅ **Exportar dados**
+- ✅ **Interface responsiva**
+
+## 🐛 **Problemas Comuns**
+
+### **❌ "Erro de conexão com banco"**
+- Verifique se MySQL está rodando no XAMPP
+- Confirme se o banco `occurrence_system` existe
+- Teste: http://localhost/phpmyadmin
+
+### **❌ "Página não carrega"**
+- Verifique se Apache está rodando no XAMPP
+- Confirme se os arquivos estão em `htdocs/occurrence-system/`
+- Teste: http://localhost/
+
+### **❌ "Câmera não funciona"**
+- Permita acesso à câmera no navegador
+- Use HTTPS em produção (localhost funciona em HTTP)
+- Alternativamente, use "Carregar Imagem"
+
+### **❌ "Erro 500 - Internal Server Error"**
+- Verifique se PHP está habilitado no XAMPP
+- Confirme se os arquivos PHP têm a extensão `.php`
+- Verifique logs em: `xampp/apache/logs/error.log`
+
+## 🌐 **Acessar de outros dispositivos**
+
+Para acessar de celular/tablet na mesma rede:
+
+1. Descubra o IP do computador: `ipconfig` (Windows) ou `ifconfig` (Linux/Mac)
+2. Acesse: `https://[SEU_IP]/occurrence-system/`
+3. Exemplo: `https://192.168.1.100/occurrence-system/`
+
+### **Para certificado SSL para executar https recomendo:**
+
+### **1. Baixar e configurar ngrok:**
+
+1. **Acesse:** [https://ngrok.com/](https://ngrok.com/)
+2. **Faça cadastro gratuito**
+3. **Baixe o ngrok** para Windows
+4. **Extraia** o arquivo `ngrok.exe` para uma pasta (ex: `C:\ngrok\`)
 
 
-### Passos para Instalação
+### **2. Configurar token:**
 
-1. Clone o repositório:
+1. **No site do ngrok**, copie seu token de autenticação
+2. **Abra o Prompt de Comando** como administrador
+3. **Navegue para a pasta do ngrok:**
 
 ```shellscript
-git clone https://github.com/incendios-monitor-sql.git
-cd sistema-ocorrencias
+cd C:\ngrok
 ```
 
 
-2. Execute o script de criação do banco de dados:
+**3. Configure o token:**
 
 ```shellscript
-mysql -u seu_usuario -p &lt; schema.sql
+ngrok config add-authtoken SEU_TOKEN_AQUI
 ```
 
 
-3. (Opcional) Carregue dados de exemplo:
+### **4. Executar ngrok:**
+
+**No mesmo Prompt de Comando:**
 
 ```shellscript
-mysql -u seu_usuario -p sistema_ocorrencias &lt; operacoes.sql
+ngrok http 80
 ```
 
+## 📊 **Banco de Dados**
 
-
-
-## 🚀 Como Usar
-
-### Registrar uma Nova Ocorrência
+O sistema cria automaticamente a tabela:
 
 ```sql
-INSERT INTO ocorrencias (
-    usuario_id, 
-    titulo, 
-    descricao, 
-    status, 
-    prioridade, 
-    latitude, 
-    longitude
-) VALUES (
-    1, 
-    'Poste com lâmpada queimada', 
-    'Poste na Rua das Flores, em frente ao número 123, está com a lâmpada queimada há 3 dias', 
-    'pendente', 
-    'media', 
-    -23.550520, 
-    -46.633308
+CREATE TABLE occurrences (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    image LONGTEXT NOT NULL,
+    comment TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'Não resolvido',
+    category VARCHAR(50) NOT NULL,
+    priority VARCHAR(20) NOT NULL,
+    latitude DECIMAL(10, 8) NULL,
+    longitude DECIMAL(11, 8) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 
-### Consultar Ocorrências Pendentes
+## 🎯 **Pronto para usar!**
 
-```sql
-SELECT 
-    o.id, 
-    o.titulo, 
-    o.descricao, 
-    o.prioridade,
-    u.nome AS registrado_por,
-    o.data_registro
-FROM 
-    ocorrencias o
-JOIN 
-    usuarios u ON o.usuario_id = u.id
-WHERE 
-    o.status = 'pendente'
-ORDER BY 
-    o.data_registro DESC;
-```
-
-### Atualizar Status de uma Ocorrência
-
-```sql
-UPDATE ocorrencias 
-SET status = 'resolvido' 
-WHERE id = 1;
-```
-
-### Adicionar um Comentário
-
-```sql
-INSERT INTO comentarios (
-    ocorrencia_id,
-    usuario_id,
-    conteudo
-) VALUES (
-    1,
-    2,
-    'Equipe de manutenção enviada ao local. Previsão de resolução: 24h.'
-);
-```
-
-## 📝 Exemplos
-
-### Exemplo 1: Fluxo Completo de uma Ocorrência
-
-1. Usuário registra uma nova ocorrência
-2. Operador adiciona comentário e muda status para "em análise"
-3. Após resolução, operador atualiza status para "resolvido"
-4. Usuário confirma resolução com um comentário
-
-
-### Exemplo 2: Consulta de Ocorrências por Região
-
-```sql
-SELECT 
-    o.id, 
-    o.titulo, 
-    o.status,
-    (
-        6371 * acos(
-            cos(radians(-23.550520)) * 
-            cos(radians(o.latitude)) * 
-            cos(radians(o.longitude) - radians(-46.633308)) + 
-            sin(radians(-23.550520)) * 
-            sin(radians(o.latitude))
-        )
-    ) AS distancia_km
-FROM 
-    ocorrencias o
-HAVING 
-    distancia_km &lt; 5
-ORDER BY 
-    distancia_km;
-```
-
-## 👥 Contribuição
-
-Contribuições são bem-vindas! Siga estes passos:
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova funcionalidade'`)
-4. Faça push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
-
-
-### Boas Práticas para Contribuição
-
-- Mantenha o código SQL organizado e comentado
-- Siga o padrão de nomenclatura existente
-- Adicione índices para consultas frequentes
-- Documente novas funcionalidades
-
-
-## 📄 Licença
-
-Este projeto está licenciado sob a licença MIT
-
----
-
-Desenvolvido com ❤️ por [Gladiston](https://github.com/GladistonXD)
-
-```plaintext
-
-Este README.md fornece uma documentação clara e concisa para o projeto de Sistema de Registro de Ocorrências no GitHub. Ele inclui:
-
-1. **Visão geral do projeto** - Explicação clara do propósito e funcionalidades
-2. **Estrutura do banco de dados** - Diagrama ER simplificado
-3. **Instruções de instalação** - Passos para configurar o banco de dados
-4. **Exemplos de uso** - Comandos SQL para operações comuns
-5. **Guia de contribuição** - Como outros desenvolvedores podem contribuir
-6. **Licença** - Informações sobre licenciamento
-
-O README segue as melhores práticas para documentação no GitHub, com formatação adequada, emojis para melhorar a legibilidade, e badges para mostrar informações importantes como licença e versão.
-
-```
-
-
+Agora você tem um sistema completo de registro de ocorrências rodando no XAMPP com banco MySQL! 🎉
