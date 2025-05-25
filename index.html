@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Registro de Incêndios - XAMPP</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .camera-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 0.5rem;
+    }
+    
+    .status-badge {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .status-badge:hover {
+      transform: scale(1.05);
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .pulse {
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .success-message {
+      background-color: #10b981;
+      color: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .map-container {
+      height: 300px;
+      width: 100%;
+      border-radius: 0.5rem;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover {
+      color: black;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-red-600">🔥 Sistema de Registro de Incêndios</h1>
+        <p class="text-gray-600">Detecção e monitoramento de focos de incêndio</p>
+      </div>
+      <div class="flex space-x-2">
+        <button id="refreshBtn" class="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-500 transition">
+          <i class="fas fa-sync-alt"></i> Atualizar
+        </button>
+        <button id="testConnectionBtn" class="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-500 transition">
+          <i class="fas fa-database"></i> Testar DB
+        </button>
+      </div>
+    </header>
+
+    <!-- Mensagem de sucesso -->
+    <div id="successMessage" class="success-message">
+      <i class="fas fa-check-circle mr-2"></i>
+      <span id="successText">Operação realizada com sucesso!</span>
+    </div>
+    
+    <!-- Layout Principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Painel de Captura -->
+      <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">Registrar Novo Incêndio</h2>
+        
+        <!-- Câmera/Preview -->
+        <div class="camera-container mb-4">
+          <video id="video" class="w-full rounded-lg border-2 border-gray-200 hidden" autoplay playsinline></video>
+          <div id="capturePreview" class="hidden relative">
+            <img id="previewImage" class="w-full rounded-lg border-2 border-gray-200" alt="Preview">
+            <button id="cancelCaptureBtn" class="absolute top-2 right-2 bg-red-600 text-white p-2 rounded-full hover:bg-red-500">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <div id="noCamera" class="bg-gray-200 p-8 rounded-lg text-center text-gray-500">
+            <i class="fas fa-camera text-3xl mb-2"></i>
+            <p>Câmera não disponível ou não permitida</p>
+            <p class="text-sm mt-2">Use o botão "Carregar Imagem" abaixo</p>
+          </div>
+        </div>
+        
+        <!-- Formulário -->
+        <form id="occurrenceForm" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Descrição do Incêndio *</label>
+              <textarea id="comment" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500" placeholder="Descreva o foco de incêndio, localização, intensidade..." required></textarea>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Incêndio</label>
+              <select id="category" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                <option value="vegetacao">Vegetação/Mata</option>
+                <option value="residencial">Residencial</option>
+                <option value="comercial">Comercial/Industrial</option>
+                <option value="veiculo">Veículo</option>
+                <option value="lixo">Lixo/Entulho</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Intensidade</label>
+              <select id="priority" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500">
+                <option value="baixa">Pequeno Foco</option>
+                <option value="media" selected>Foco Médio</option>
+                <option value="alta">Grande Incêndio</option>
+                <option value="urgente">Incêndio Crítico</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Botões de ação -->
+          <div class="flex gap-2">
+            <button type="button" id="captureBtn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500 transition flex-1">
+              <i class="fas fa-camera mr-2"></i> Fotografar Incêndio
+            </button>
+            <button type="button" id="uploadBtn" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-500 transition flex-1">
+              <i class="fas fa-upload mr-2"></i> Carregar Foto
+            </button>
+            <input type="file" id="imageUpload" accept="image/*" class="hidden">
+          </div>
+
+          <button type="submit" id="saveBtn" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500 transition pulse hidden">
+            <i class="fas fa-save mr-2"></i> Registrar Incêndio
+          </button>
+        </form>
+      </div>
+      
+      <!-- Painel de Estatísticas -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800">Estatísticas de Incêndios</h2>
+        
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <div class="bg-red-100 p-3 rounded-lg text-center">
+            <p class="text-red-800 text-sm">Total</p>
+            <p id="totalCount" class="text-2xl font-bold text-red-600">0</p>
+          </div>
+          <div class="bg-orange-100 p-3 rounded-lg text-center">
+            <p class="text-orange-800 text-sm">Ativos</p>
+            <p id="pendingCount" class="text-2xl font-bold text-orange-600">0</p>
+          </div>
+          <div class="bg-green-100 p-3 rounded-lg text-center">
+            <p class="text-green-800 text-sm">Controlados</p>
+            <p id="resolvedCount" class="text-2xl font-bold text-green-600">0</p>
+          </div>
+          <div class="bg-yellow-100 p-3 rounded-lg text-center">
+            <p class="text-yellow-800 text-sm">Críticos</p>
+            <p id="urgentCount" class="text-2xl font-bold text-yellow-600">0</p>
+          </div>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="space-y-3">
+          <h3 class="text-lg font-medium text-gray-800">Filtros</h3>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Todos</option>
+              <option value="Não resolvido">Incêndios Ativos</option>
+              <option value="Resolvido">Incêndios Controlados</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+            <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              <option value="">Todos os Tipos</option>
+              <option value="vegetacao">Vegetação/Mata</option>
+              <option value="residencial">Residencial</option>
+              <option value="comercial">Comercial/Industrial</option>
+              <option value="veiculo">Veículo</option>
+              <option value="lixo">Lixo/Entulho</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+            <input type="text" id="searchFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" placeholder="Buscar...">
+          </div>
+          
+          <button id="applyFilters" class="w-full bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-500 transition text-sm">
+            <i class="fas fa-filter mr-1"></i> Aplicar Filtros
+          </button>
+        </div>
+        
+        <!-- Exportar -->
+        <div class="mt-6">
+          <h3 class="text-lg font-medium mb-2 text-gray-800">Exportar</h3>
+          <div class="flex gap-2">
+            <button id="exportJSON" class="bg-gray-800 text-white px-3 py-2 rounded-lg hover:bg-gray-700 transition flex-1 text-sm">
+              JSON
+            </button>
+            <button id="exportCSV" class="bg-green-800 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition flex-1 text-sm">
+              CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa de Incêndios -->
+    <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4 text-gray-800">Mapa de Incêndios</h2>
+      <div id="map" class="map-container"></div>
+    </div>
+    
+    <!-- Lista de Ocorrências -->
+    <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Incêndios Registrados</h2>
+        <span id="itemCount" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">0 itens</span>
+      </div>
+      
+      <div id="loading" class="text-center py-8 hidden">
+        <div class="loader mx-auto mb-2"></div>
+        <p class="text-gray-500">Carregando...</p>
+      </div>
+      
+      <div id="gallery" class="space-y-4">
+        <!-- Preenchido via JavaScript -->
+      </div>
+      
+      <div id="noItems" class="text-center py-8 text-gray-500">
+        <i class="fas fa-fire text-4xl mb-2 text-red-400"></i>
+        <p>Nenhum incêndio registrado</p>
+        <p class="text-sm mt-2">Fotografe e registre focos de incêndio para monitoramento</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Detalhes -->
+  <div id="detailsModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2 class="text-xl font-semibold mb-4 text-gray-800">Detalhes do Incêndio</h2>
+      <div id="modalContent">
+        <!-- Preenchido via JavaScript -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Notificações -->
+  <div id="notification" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg hidden z-50">
+    <span id="notificationMessage">Mensagem</span>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
